@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="pragma" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="shortcut icon" href="img/kurento.png" type="image/png"/>
+
+    <script src="bower_components/adapter.js/adapter.js"></script>
+    <script src="bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
+    <title>Hari Test Tool</title>
+    <style type="text/css">
+    .blign{
+        float: left;
+/*        width: 36%;*/
+        text-align: right;
+    }
+    </style>
+  </head>
+  <body>
+    <script type="text/javascript">  
+    /*var upimg = document.getElementById('fileupload');
+    upimg.addEventListener('change', function(e){
+        var files = this.files;
+        if(files.length){
+            checkFile(this.files);
+        }
+    });*/
+    function checkFile(files){
+    if (files.length != 0) {
+        //获取文件并用FileReader进行读取
+        var html = '';
+        var i = 0, j = show.childElementCount;
+        var funcs = function(){
+            if(files[i]){
+                var x = parseInt((i+j)/4)*250;
+                var y = ((i+j)%4)*250;
+                var reader = new FileReader();
+                if(!/image\/\w+/.test(files[i].type)){
+                    show.innerHTML = "请确保文件为图像类型";
+                    return false;
+                }
+                reader.onload = function(e) {
+                    html += '<div class="item" style="top:'+x+'px; left:'+y+'px;"><img src="'+e.target.result+'" alt="img"></div>';
+                    i++;
+                    funcs(); // onload为异步调用
+                };
+                reader.readAsDataURL(files[i]);
+            }else{
+                show.innerHTML += html;
+            }
+        }
+        funcs();
+    }
+    }
+    function sub() {  
+        $.ajax({  
+                cache: false,  
+                type: "POST",  
+                url:"/",  
+                data: new FormData($('#uploadface')[0]),// 你的formid  
+                async: true,  
+                processData: false,
+                contentType: false,
+                dataType: 'multipart/form-data',
+                error: function(response) {  
+                    if(response.status === 200) {
+                        var obj = JSON.parse(response.responseText);
+                        if (obj.error != null) {
+                            document.getElementById("result").value=obj.error;
+                            return;
+                        }
+                        if (obj.error_message != null) {
+                            document.getElementById("result").value=obj.error_message;
+                            return;
+                        }
+                        var output = "";
+                        for (var i=0; i<obj.faces.length; i++) {
+                            output += '识别到人物' + (i+1) + ':\n';
+                            if (obj.faces[i].attributes.gender.value=='Male') {
+                                output += "性别:男\n";
+                                output += "颜值:" + obj.faces[i].attributes.beauty.male_score + '\n';
+                            }
+                            else {
+                                output += "性别:女\n";
+                                output += "颜值:" + obj.faces[i].attributes.beauty.female_score + '\n';
+                            }
+                            output += "年龄:" + obj.faces[i].attributes.age.value + '\n';
+                            output += "-----------------" + '\n';
+                        }
+                        if (obj.faces.length == 0) {
+                            output = "未识别到人脸";
+                        }
+                        document.getElementById("result").value=output;
+                    } else if(response.status === "error") {
+                        document.getElementById("result").value="error";
+                    }
+                    
+                }  
+            });  
+    }  
+</script>   
+    <form align="center" style="margin-top:100px" id="uploadface" enctype="multipart/form-data" method="post" action="/">
+    <div>
+    <label>请选择需要识别的人脸图片(图片格式：JPG(JPEG)，PNG)</label>
+    <br>
+    <input style="float:center" id="fileupload" name="logo" type="file"/>
+    </div>
+    <br>
+    <div>
+    <input value="开始识别" type="button", onclick="sub()"/>
+    </div>
+    <br>
+    <div class='show' id="show"></div>
+    <div>
+         <textarea id="result" rows="30" cols="100">
+          </textarea>
+    </div>
+    <label>图片像素尺寸：最小 48*48 像素，最大 4096*4096 像素
+           图片文件大小：2 MB
+           最小人脸像素尺寸： 系统能够检测到的人脸框为一个正方形，正方形边长的最小值为图像短边长度的 48 分之一，最小值不低于 48 像素。 例如图片为 4096*3200 像素，则最小人脸像素尺寸为 66*66 像素。):   </label>
+
+    </form>
+</body>
+</html>
